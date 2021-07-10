@@ -11,13 +11,19 @@ import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
 import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 
+import javax.imageio.ImageIO;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.JTextField;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 public class Main implements Runnable {
 
@@ -25,8 +31,10 @@ public class Main implements Runnable {
 	public static int frameHeight = 650;
 	
 	int numSections = 169;
-	int numCreatures = 200;
+	int numCreatures = 3000;
 	int blurRadius = 3;
+	
+	double ticks = 180.0;
 	
 	boolean gridVis = false;
 	
@@ -43,12 +51,11 @@ public class Main implements Runnable {
 	Graphics g;
 	Kernel kernel;
 	
-	ArrayList<BufferedImage> frames = new ArrayList<BufferedImage>();
+	int numFrames = 3600;
+	BufferedImage frames[] = new BufferedImage[numFrames];
 	int framesAdded = 0;
 	int frameOn = 0;
 	boolean makeNewFrames = true;
-	
-	public Gradient gradientClass;
 	
 	int[][] pixels = new int[frameWidth][frameHeight];
 	int[][] pixels2 = new int[frameWidth][frameHeight];
@@ -89,7 +96,6 @@ public class Main implements Runnable {
 		initCreatures();
 		initSections();
 		initBlur();
-		initGradient();
 		
 		for(int i = 0; i < creaturesInSection.length; i++) {
 			creaturesInSection[i] = new ArrayList<Creature>();
@@ -99,12 +105,6 @@ public class Main implements Runnable {
 		}
 		
 		startLoop();
-		
-	}
-	
-	public void initGradient() {
-		
-		gradientClass = new Gradient(this);
 		
 	}
 	
@@ -145,8 +145,7 @@ public class Main implements Runnable {
 	}
 	
 	public void startLoop() {
-		
-		final double ticks = 180.0;
+		;
 		long lastTime = System.nanoTime();
 		double delta = 0;
 		double ns = 1000000000 / ticks;
@@ -161,7 +160,7 @@ public class Main implements Runnable {
 			lastTime = now;
 			
 			if(delta >= 1) {
-				tick();
+				//tick();
 				render();
 				FPScounter++;
 				delta--;
@@ -169,7 +168,7 @@ public class Main implements Runnable {
 			
 			if(now - FPStimer >= 1000000000) {
 				
-				System.out.println(FPScounter);
+				//System.out.println(FPScounter);
 				FPScounter = 0;
 				FPStimer = System.nanoTime();
 				
@@ -180,8 +179,6 @@ public class Main implements Runnable {
 	}
 	
 	private void tick() {
-		
-		System.out.println("tick");
 		
 		for(int i = 0; i < creaturesInSection.length; i++) {
 			try {
@@ -198,8 +195,6 @@ public class Main implements Runnable {
 			}
 			
 		}
-		
-		gradientClass.tick();
 		
 	}
 	
@@ -307,32 +302,88 @@ public class Main implements Runnable {
 			showGrid.setText("Show Grid");
 			this.add(showGrid);
 			
+			JSlider effectSlider = new JSlider(0, 150);
+			effectSlider.addChangeListener(new ChangeListener() {
+
+				public void stateChanged(ChangeEvent e) {
+					
+					for(Creature c : creatures) {
+						c.setEffect(effectSlider.getValue());
+					}
+					
+				}
+				
+			});
+			effectSlider.setName("Effect");
+			this.add(effectSlider);
+			
 		}
 
 		public void paintComponent(Graphics g) {
 			super.paintComponent(g);
 			
-			g2 = (Graphics2D) graphicsImage.getGraphics();
+			if(makeNewFrames) {
 			
-			g2.setColor(Color.BLACK);
-			g2.fillRect(0, 0, frameWidth, frameHeight);
-			
-			//gradientClass.paint(g2);
-			for(int i = 0; i < numCreatures; i++) creatures[i].paint(g2);
-			
-			if(gridVis) for(Rectangle r : sectRects) { g2.draw(r); }
-			for(int i = 0; i < sectRects.length; i++) {
+				tick();
 				
-				//g2.drawString(Integer.toString(i), (int)sectRects[i].getX() + 10, (int)sectRects[i].getY() + 10);
+				g2 = (Graphics2D) graphicsImage.getGraphics();
+				
+				g2.setColor(Color.BLACK);
+				g2.fillRect(0, 0, frameWidth, frameHeight);
+				
+				//gradientClass.paint(g2);
+				for(int i = 0; i < numCreatures; i++) creatures[i].paint(g2);
+				
+				if(gridVis) for(Rectangle r : sectRects) { g2.draw(r); }
+				for(int i = 0; i < sectRects.length; i++) {
+					
+					//g2.drawString(Integer.toString(i), (int)sectRects[i].getX() + 10, (int)sectRects[i].getY() + 10);
+					
+				}
+				
+				//graphicsImage = op.filter(graphicsImage, null);
+				
+				/*
+				
+				File imageFile = new File("C:\\Users\\Alex\\Desktop\\Eclipse Workspace\\Patters2\\frames\\image"+framesAdded+".jpg");
+				try {
+					ImageIO.write(copyImage(graphicsImage), "jpg", imageFile);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				
+				System.out.println("added " + framesAdded);
+				framesAdded++;
+				
+				if(framesAdded > numFrames) { makeNewFrames = false; ticks = 30.0; }
+				
+				*/
+				
+				g.drawImage(graphicsImage, 0, 0, null);
+			
+			} else {
+				
+				if(frameOn > frames.length - 5) frameOn = 0;
+				
+				try {
+					g.drawImage(ImageIO.read(new File("C:\\Users\\Alex\\Desktop\\Eclipse Workspace\\Patters2\\frames\\image"+frameOn+".jpg")), 0, 0, null);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				frameOn++;
 				
 			}
 			
-			//graphicsImage = op.filter(graphicsImage, null);
-			
-			g.drawImage(graphicsImage, 0, 0, null);
-			
 		}
 		
+	}
+	
+	public static BufferedImage copyImage(BufferedImage source){
+	    BufferedImage b = new BufferedImage(source.getWidth(), source.getHeight(), source.getType());
+	    Graphics g = b.getGraphics();
+	    g.drawImage(source, 0, 0, null);
+	    g.dispose();
+	    return b;
 	}
 	
 }

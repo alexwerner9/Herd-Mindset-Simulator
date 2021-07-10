@@ -46,6 +46,9 @@ public class Creature {
 	
 	double effect = 50.0;
 	
+	double circXPoints[] = new double[360];
+	double circYPoints[] = new double[360];
+	
 	public Creature(Main m) {
 		
 		main = m;
@@ -83,31 +86,6 @@ public class Creature {
 		
 		cRect.setBounds((int)x, (int)y, width, height);
 		vision.reset();
-		//vision rect
-//		vision.addPoint(
-//				
-//					(int)cRect.getX() + (width / 2) + (int)velY * visionSize + (velY > 0 ? width : -width),
-//					(int)cRect.getY() + (height / 2) + (int)-velX * visionSize + (-velX > 0 ? width : -width)
-//				
-//				);
-//		vision.addPoint(
-//				
-//				(int)cRect.getX() + (height / 2) + (int)-velY * visionSize + (-velY > 0 ? width : -width),
-//				(int)cRect.getY() + (height / 2) + (int)velX * visionSize + ((velX > 0 ? width : -width))
-//			
-//			);
-//		vision.addPoint(
-//				
-//				(int)vision.xpoints[1] + (int)velX * visionSize + (velX > 0 ? width : -width),
-//				(int)vision.ypoints[1] + (int)velY * visionSize + (velY > 0 ? width : -width)
-//			
-//			);
-//		vision.addPoint(
-//				
-//				(int)vision.xpoints[0] + (int)velX * visionSize + (velX > 0 ? width : -width),
-//				(int)vision.ypoints[0] + (int)velY * visionSize + (velY > 0 ? width : -width)
-//			
-//			);
 		
 		visionRect.setBounds((int)(cRect.getCenterX() - (cRect.getWidth() * 2)),
 				(int)(cRect.getCenterY() - (cRect.getHeight() * 2)),
@@ -147,54 +125,41 @@ public class Creature {
 			
 		}
 		
-		tester = 0;
-		
 		for(int i = 0; i < visionSections.size(); i++) {
 			
 			for(Creature c : main.creaturesInSection[visionSections.get(i)]) {
 				
 				if(visionRect.intersects(c.cRect)) {
 					
-					//if(c.species == this.species) {
-						
-						this.velX = ((c.velX) + this.velX * effect) / (effect + 1.0);
-						this.velY = ((c.velY) + this.velY * effect) / (effect + 1.0);
-						tester++;
-						
-					//}
+					this.velX = ((c.velX) + this.velX * effect * 1) / (effect + 1.0);
+					this.velY = ((c.velY) + this.velY * effect * 1) / (effect + 1.0);
 					
 					if(cColor.getRed() > 250) red = false; else { red = true; }
 					if(cColor.getGreen() > 250) green = false; else { green = true; }
 					if(cColor.getBlue() > 250) blue = false; else { blue = true; }
-					
-					if(rand.nextInt(1) == 0) {
-					
-						if(c.species == 0) {
-							
-							cColor = new Color(red ? cColor.getRed() + 1 : cColor.getRed(),
-									cColor.getGreen(),
-									cColor.getBlue() > 10 ? cColor.getBlue() - 1 : cColor.getBlue());
-							
-							
-							
-						}
 						
-						if(c.species == 1) {
-							
-							cColor = new Color(cColor.getRed() > 10 ? cColor.getRed() - 1 : cColor.getRed(),
-									green ? cColor.getGreen() + 1 : cColor.getGreen(),
-									cColor.getBlue());
-							
-						}
+					if(c.species == 0) {
 						
-						if(c.species == 2) {
-							
-							cColor = new Color(cColor.getRed(),
-									cColor.getGreen() > 10 ? cColor.getGreen() - 1 : cColor.getGreen(),
-									blue ? cColor.getBlue() + 1 : cColor.getBlue());
-							
-						}
+						cColor = new Color(red ? cColor.getRed() + 1 : cColor.getRed(),
+								cColor.getGreen(),
+								cColor.getBlue() > 10 ? cColor.getBlue() - 1 : cColor.getBlue());
+						
+					}
 					
+					if(c.species == 1) {
+						
+						cColor = new Color(cColor.getRed() > 10 ? cColor.getRed() - 1 : cColor.getRed(),
+								green ? cColor.getGreen() + 1 : cColor.getGreen(),
+								cColor.getBlue());
+						
+					}
+					
+					if(c.species == 2) {
+						
+						cColor = new Color(cColor.getRed(),
+								cColor.getGreen() > 10 ? cColor.getGreen() - 1 : cColor.getGreen(),
+								blue ? cColor.getBlue() + 1 : cColor.getBlue());
+						
 					}
 					
 				}
@@ -210,41 +175,44 @@ public class Creature {
 	
 	public void paint(Graphics2D g) {
 		
+		cColor = new Color(cColor.getRed(), cColor.getGreen(), cColor.getBlue(), 200);
+		
 		g.setColor(cColor);
-		//g.fillRect((int)x, (int)y, width, height);
-		
-		drawRadialGradient(g, x, y, 100, cColor, cColor);
-		
-		//g.drawRect((int)visionRect.getX(), (int)visionRect.getY(), (int)visionRect.getWidth(), (int)visionRect.getHeight());
-		
+		g.fillRect((int)x, (int)y, width, height);
 		g.setColor(Color.GREEN);
-		
-		//g.drawPolygon(vision);
 		
 	}
 	
-	
-	// x(t) = r cos(t) + j
-	// y(t) = r sin(t) + k
-	// (j,k) = origin
-	// r = radius
 	public void drawRadialGradient(Graphics2D g, double pointX, double pointY, double radius, Color innerColor, Color outerColor) {
 		
-		double circXPoints[] = new double[360];
-		double circYPoints[] = new double[360];
-		double tempX;
-		double tempY;
+		circXPoints = new double[360];
+		circYPoints = new double[360];
 		
-		double numInterp = 20;
+		double numInterp = 200;
 		
-		Color newColor = new Color(0, 0, 0);
+		Color newColor;
 		
 		for(int n = 0; n < numInterp; n++) {
-		
-			// radius / numInterp = distance needed per step
-			// radius - (distance needed) * how many steps we've been through
+			
+			double r = radius*2 - ((radius*2 / numInterp)) * n;
+			
+			int red = (int)(outerColor.getRed() + (innerColor.getRed() / numInterp) * n);
+			int green = (int)(outerColor.getGreen() + (innerColor.getGreen() / numInterp) * n);
+			int blue = (int)(outerColor.getBlue() + (innerColor.getBlue() / numInterp) * n);
+			
+			red = red > 255 ? 255 : red;
+			green = green > 255 ? 255 : green;
+			blue = blue > 255 ? 255 : blue;
+			
+			newColor = new Color(red, green, blue, (int)(255 / numInterp) * n);
+			
+			g.setColor(newColor);
+			
+			g.drawOval((int)(pointX - r/2), (int)(pointY - r/2), (int)(r), (int)(r));
 			
 			for(int i = 0; i < 360; i++) {
+				
+				/*
 				
 				tempX = getCircXPoint(pointX, pointY, radius - ((radius / numInterp) * n), i);
 				tempY = getCircYPoint(pointX, pointY, radius - ((radius / numInterp) * n), i);
@@ -252,18 +220,9 @@ public class Creature {
 				circXPoints[i] = tempX;
 				circYPoints[i] = tempY;
 				
-				int red = (int)(outerColor.getRed() + (innerColor.getRed() / numInterp) * n);
-				int green = (int)(outerColor.getGreen() + (innerColor.getGreen() / numInterp) * n);
-				int blue = (int)(outerColor.getBlue() + (innerColor.getBlue() / numInterp) * n);
-				
-				red = red > 255 ? 255 : red;
-				green = green > 255 ? 255 : green;
-				blue = blue > 255 ? 255 : blue;
-				
-				newColor = new Color(red, green, blue, (int)((255 / numInterp) * n));
-				
-				g.setColor(newColor);
 				g.fillRect((int)tempX, (int)tempY, 1, 1);
+				
+				*/
 				
 			}
 		
@@ -289,6 +248,8 @@ public class Creature {
 	
 	public void setX(int i) { this.x = i; }
 	public void setY(int i) { this.y = i; }
+	public void setEffect(double e) { this.effect = e; }
+	
 	public int getX() { return (int)x; }
 	public int getY() { return (int)y; }
 	public Color getColor() { return cColor; }
