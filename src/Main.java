@@ -87,6 +87,7 @@ public class Main implements Runnable {
 		
 	}
 	
+	//Start loop
 	public void run() {
 		
 		System.out.println("Started Thread");
@@ -108,42 +109,7 @@ public class Main implements Runnable {
 		
 	}
 	
-	public void initSections() {
-		
-		int count = 0;
-		
-		for(int y = 0; y + (frameHeight / Math.sqrt(numSections) - 1) < frameHeight; y += frameHeight / Math.sqrt(numSections)) {
-			
-			for(int x = 0; x + (frameWidth / Math.sqrt(numSections)) - 1 < frameWidth; x += frameWidth / Math.sqrt(numSections)) {
-				
-				sectRects[count] = new Rectangle();
-				sectRects[count].setBounds(x, y, (int)(frameWidth / Math.sqrt(numSections)), (int)(frameHeight / Math.sqrt(numSections)));
-				
-				count++;
-				
-			}
-			
-		}
-		
-		System.out.println(count);
-		
-	}
-	
-	public void initBlur() {
-		
-		for(int i = 0; i < Math.pow(blurRadius, 2); i++) {
-			
-			blurArray[i] = 1.0f / 1.0f;
-			
-		}
-		
-		graphicsImage = new BufferedImage(frameWidth, frameHeight, BufferedImage.TYPE_INT_RGB);
-		kernel = new Kernel(blurRadius, blurRadius, blurArray);
-		op = new ConvolveOp(kernel);
-		g2 = (Graphics2D) graphicsImage.getGraphics();
-		
-	}
-	
+	//Main loop
 	public void startLoop() {
 		;
 		long lastTime = System.nanoTime();
@@ -178,6 +144,7 @@ public class Main implements Runnable {
 		
 	}
 	
+	//Ticks
 	private void tick() {
 		
 		for(int i = 0; i < creaturesInSection.length; i++) {
@@ -195,6 +162,63 @@ public class Main implements Runnable {
 			}
 			
 		}
+		
+	}
+	
+	public void render() {
+		
+		panel.repaint();
+		
+	}
+	
+	//Creates creature arrays
+	public void initCreatures() {
+		
+		for(int i = 0; i < numCreatures; i++) {
+			
+			creatures[i] = new Creature(this);
+			creatures[i].setX(rand.nextInt(frameWidth));
+			creatures[i].setY(rand.nextInt(frameHeight));
+			
+		}
+		
+	}
+	
+	//Splits screen into sections for faster performance
+	public void initSections() {
+		
+		int count = 0;
+		
+		for(int y = 0; y + (frameHeight / Math.sqrt(numSections) - 1) < frameHeight; y += frameHeight / Math.sqrt(numSections)) {
+			
+			for(int x = 0; x + (frameWidth / Math.sqrt(numSections)) - 1 < frameWidth; x += frameWidth / Math.sqrt(numSections)) {
+				
+				sectRects[count] = new Rectangle();
+				sectRects[count].setBounds(x, y, (int)(frameWidth / Math.sqrt(numSections)), (int)(frameHeight / Math.sqrt(numSections)));
+				
+				count++;
+				
+			}
+			
+		}
+		
+		System.out.println(count);
+		
+	}
+	
+	//Experiment in blurring screen to see effect
+	public void initBlur() {
+		
+		for(int i = 0; i < Math.pow(blurRadius, 2); i++) {
+			
+			blurArray[i] = 1.0f / 1.0f;
+			
+		}
+		
+		graphicsImage = new BufferedImage(frameWidth, frameHeight, BufferedImage.TYPE_INT_RGB);
+		kernel = new Kernel(blurRadius, blurRadius, blurArray);
+		op = new ConvolveOp(kernel);
+		g2 = (Graphics2D) graphicsImage.getGraphics();
 		
 	}
 	
@@ -231,24 +255,8 @@ public class Main implements Runnable {
 		}
 	}
 	
-	public void render() {
-		
-		panel.repaint();
-		
-	}
 	
-	public void initCreatures() {
-		
-		for(int i = 0; i < numCreatures; i++) {
-			
-			creatures[i] = new Creature(this);
-			creatures[i].setX(rand.nextInt(frameWidth));
-			creatures[i].setY(rand.nextInt(frameHeight));
-			
-		}
-		
-	}
-	
+	//Returns section based on point
 	public int getSection(int x, int y) {
 		
 		int bx = (int)Math.ceil(x / sectRects[0].width);
@@ -260,12 +268,12 @@ public class Main implements Runnable {
 	class JPanelClass extends JPanel {
 		private static final long serialVersionUID = 1L;
 		
+		Main main;
+		
 		BufferedImage image = new BufferedImage(frameWidth + 100, frameHeight + 100, BufferedImage.TYPE_INT_RGB);
+		Graphics graphics;
 		
 		Random rand;
-		
-		Graphics graphics;
-		Main main;
 		
 		public JPanelClass(Main m, Graphics g) {
 			
@@ -274,6 +282,7 @@ public class Main implements Runnable {
 			main = m;
 			graphics = g;
 			
+			//JComponents for live control over results
 			JButton reset = new JButton();
 			reset.addActionListener(new ActionListener() {
 				
@@ -319,6 +328,9 @@ public class Main implements Runnable {
 			
 		}
 
+		/*ALL COMMENTED OUT SECTIONS WERE BASED ON
+		  IDEA OF SAVING FRAMES FOR REPLAY LATER */
+		
 		public void paintComponent(Graphics g) {
 			super.paintComponent(g);
 			
@@ -378,6 +390,7 @@ public class Main implements Runnable {
 		
 	}
 	
+	//Util classS
 	public static BufferedImage copyImage(BufferedImage source){
 	    BufferedImage b = new BufferedImage(source.getWidth(), source.getHeight(), source.getType());
 	    Graphics g = b.getGraphics();
