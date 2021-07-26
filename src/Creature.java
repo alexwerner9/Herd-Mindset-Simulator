@@ -35,8 +35,8 @@ public class Creature {
 	
 	Color cColor = new Color(0, 0, 0);
 	
-	public ArrayList<Integer> sections = new ArrayList<Integer>();
-	public ArrayList<Integer> visionSections = new ArrayList<Integer>();
+	ArrayList<Integer> sections = new ArrayList<Integer>();
+	ArrayList<Integer> visionSections = new ArrayList<Integer>();
 	
 	Rectangle cRect;
 	Rectangle visionRect;
@@ -45,9 +45,6 @@ public class Creature {
 	Main main;
 	
 	double effect = 50.0;
-	
-	double circXPoints[] = new double[360];
-	double circYPoints[] = new double[360];
 	
 	public Creature(Main m) {
 		
@@ -70,8 +67,8 @@ public class Creature {
 		
 		velX = (rand.nextBoolean() ? rand.nextInt(disp) / displacement : -rand.nextInt(disp) / displacement);
 		velY = (rand.nextBoolean() ? rand.nextInt(disp) / displacement : -rand.nextInt(disp) / displacement);
-		x = rand.nextInt(main.frameWidth);
-		y = rand.nextInt(main.frameHeight);
+		x = rand.nextInt(main.FRAME_WIDTH);
+		y = rand.nextInt(main.FRAME_HEIGHT);
 		numLoops = 0;
 		species = rand.nextInt(3);
 		
@@ -168,8 +165,8 @@ public class Creature {
 			
 		}
 		
-		if(y > Main.frameHeight || y < 0) { velY = -velY; }
-		if(x > Main.frameWidth || x < 0) { velX = -velX; }
+		if(y > Main.FRAME_HEIGHT || y < 0) { velY = -velY; }
+		if(x > Main.FRAME_WIDTH || x < 0) { velX = -velX; }
 		
 	}
 	
@@ -184,9 +181,6 @@ public class Creature {
 	}
 	
 	public void drawRadialGradient(Graphics2D g, double pointX, double pointY, double radius, Color innerColor, Color outerColor) {
-		
-		circXPoints = new double[360];
-		circYPoints = new double[360];
 		
 		double numInterp = 200;
 		

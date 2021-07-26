@@ -27,23 +27,20 @@ import javax.swing.event.ChangeListener;
 
 public class Main implements Runnable {
 
-	public static int frameWidth = 1000;
-	public static int frameHeight = 650;
+	public static int FRAME_WIDTH = 1000;
+	public static int FRAME_HEIGHT = 650;
+	public static int NUM_SECTIONS = 169;
+	public static int numCreatures = 3000;
 	
-	int numSections = 169;
-	int numCreatures = 3000;
+	static final double ticks = 180.0;
+	
+	Creature[] creatures = new Creature[numCreatures];
+	Creature[][] sectCreatures = new Creature[2][numCreatures];
+	Rectangle[] sectRects = new Rectangle[NUM_SECTIONS];
+	ArrayList<Creature>[] creaturesInSection = new ArrayList[NUM_SECTIONS];
+	ArrayList<Creature>[] visionInSection = new ArrayList[NUM_SECTIONS];
+	
 	int blurRadius = 3;
-	
-	double ticks = 180.0;
-	
-	boolean gridVis = false;
-	
-	public Creature[] creatures = new Creature[numCreatures];
-	public Creature[][] sectCreatures = new Creature[2][numCreatures];
-	public Rectangle[] sectRects = new Rectangle[numSections];
-	public ArrayList<Creature>[] creaturesInSection = new ArrayList[numSections];
-	public ArrayList<Creature>[] visionInSection = new ArrayList[numSections];
-	
 	public float[] blurArray = new float[(int) Math.pow(blurRadius, 2)];
 	BufferedImageOp blur;
 	BufferedImageOp op;
@@ -51,14 +48,8 @@ public class Main implements Runnable {
 	Graphics g;
 	Kernel kernel;
 	
-	int numFrames = 3600;
-	BufferedImage frames[] = new BufferedImage[numFrames];
-	int framesAdded = 0;
-	int frameOn = 0;
-	boolean makeNewFrames = true;
-	
-	int[][] pixels = new int[frameWidth][frameHeight];
-	int[][] pixels2 = new int[frameWidth][frameHeight];
+	int[][] pixels = new int[FRAME_WIDTH][FRAME_HEIGHT];
+	int[][] pixels2 = new int[FRAME_WIDTH][FRAME_HEIGHT];
 	
 	JFrame frame;
 	JPanel panel;
@@ -80,19 +71,17 @@ public class Main implements Runnable {
 		panel = new JPanelClass(this, g);
 		
 		frame.setVisible(true);
-		frame.setSize(frameWidth, frameHeight);
+		frame.setSize(FRAME_WIDTH, FRAME_HEIGHT);
 		frame.setLocationRelativeTo(null);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setContentPane(panel);
+		
+		rand = new Random();
 		
 	}
 	
 	//Start loop
 	public void run() {
-		
-		System.out.println("Started Thread");
-		
-		rand = new Random();
 		
 		initCreatures();
 		initSections();
@@ -111,7 +100,7 @@ public class Main implements Runnable {
 	
 	//Main loop
 	public void startLoop() {
-		;
+		
 		long lastTime = System.nanoTime();
 		double delta = 0;
 		double ns = 1000000000 / ticks;
@@ -126,18 +115,15 @@ public class Main implements Runnable {
 			lastTime = now;
 			
 			if(delta >= 1) {
-				//tick();
+				tick();
 				render();
 				FPScounter++;
 				delta--;
 			}
 			
 			if(now - FPStimer >= 1000000000) {
-				
-				//System.out.println(FPScounter);
 				FPScounter = 0;
 				FPStimer = System.nanoTime();
-				
 			}
 			
 		}
@@ -154,13 +140,10 @@ public class Main implements Runnable {
 		}
 		
 		for(int i = 0; i < numCreatures; i++) {
-			
 			creatures[i].tick();
-			
 			for(int n = 0; n < creatures[i].sections.size(); n++) {
 				creaturesInSection[creatures[i].sections.get(n)].add(creatures[i]);
 			}
-			
 		}
 		
 	}
@@ -177,8 +160,8 @@ public class Main implements Runnable {
 		for(int i = 0; i < numCreatures; i++) {
 			
 			creatures[i] = new Creature(this);
-			creatures[i].setX(rand.nextInt(frameWidth));
-			creatures[i].setY(rand.nextInt(frameHeight));
+			creatures[i].setX(rand.nextInt(FRAME_WIDTH));
+			creatures[i].setY(rand.nextInt(FRAME_HEIGHT));
 			
 		}
 		
@@ -189,20 +172,18 @@ public class Main implements Runnable {
 		
 		int count = 0;
 		
-		for(int y = 0; y + (frameHeight / Math.sqrt(numSections) - 1) < frameHeight; y += frameHeight / Math.sqrt(numSections)) {
+		for(int y = 0; y + (FRAME_HEIGHT / Math.sqrt(NUM_SECTIONS) - 1) < FRAME_HEIGHT; y += FRAME_HEIGHT / Math.sqrt(NUM_SECTIONS)) {
 			
-			for(int x = 0; x + (frameWidth / Math.sqrt(numSections)) - 1 < frameWidth; x += frameWidth / Math.sqrt(numSections)) {
+			for(int x = 0; x + (FRAME_WIDTH / Math.sqrt(NUM_SECTIONS)) - 1 < FRAME_WIDTH; x += FRAME_WIDTH / Math.sqrt(NUM_SECTIONS)) {
 				
 				sectRects[count] = new Rectangle();
-				sectRects[count].setBounds(x, y, (int)(frameWidth / Math.sqrt(numSections)), (int)(frameHeight / Math.sqrt(numSections)));
+				sectRects[count].setBounds(x, y, (int)(FRAME_WIDTH / Math.sqrt(NUM_SECTIONS)), (int)(FRAME_HEIGHT / Math.sqrt(NUM_SECTIONS)));
 				
 				count++;
 				
 			}
 			
 		}
-		
-		System.out.println(count);
 		
 	}
 	
@@ -215,7 +196,7 @@ public class Main implements Runnable {
 			
 		}
 		
-		graphicsImage = new BufferedImage(frameWidth, frameHeight, BufferedImage.TYPE_INT_RGB);
+		graphicsImage = new BufferedImage(FRAME_WIDTH, FRAME_HEIGHT, BufferedImage.TYPE_INT_RGB);
 		kernel = new Kernel(blurRadius, blurRadius, blurArray);
 		op = new ConvolveOp(kernel);
 		g2 = (Graphics2D) graphicsImage.getGraphics();
@@ -223,9 +204,8 @@ public class Main implements Runnable {
 	}
 	
 	public void blur() {
-		for(int y = 1; y < frameHeight - 1; y++) {
-			
-			for(int x = 1; x < frameWidth - 1; x++) {
+		for(int y = 1; y < FRAME_HEIGHT - 1; y++) {
+			for(int x = 1; x < FRAME_WIDTH - 1; x++) {
 				
 				pixels2[x][y] = (int)((
 						
@@ -242,43 +222,37 @@ public class Main implements Runnable {
 						)/9.0);
 				
 			}
-			
 		}
-		for(int y = 1; y < frameHeight; y++) {
-			
-			for(int x = 1; x < frameWidth; x++) {
-				
+		
+		for(int y = 1; y < FRAME_HEIGHT; y++) {
+			for(int x = 1; x < FRAME_WIDTH; x++) {
 				pixels[x][y] = pixels2[x][y];
-				
 			}
-			
 		}
 	}
 	
 	
 	//Returns section based on point
 	public int getSection(int x, int y) {
-		
 		int bx = (int)Math.ceil(x / sectRects[0].width);
 		int by = (int)Math.ceil(y / sectRects[0].height);
 		
-		return by * (int)(Math.sqrt(numSections)) + bx;
+		return by * (int)(Math.sqrt(NUM_SECTIONS)) + bx;
 	}
 	
 	class JPanelClass extends JPanel {
 		private static final long serialVersionUID = 1L;
 		
 		Main main;
-		
-		BufferedImage image = new BufferedImage(frameWidth + 100, frameHeight + 100, BufferedImage.TYPE_INT_RGB);
+		BufferedImage image = new BufferedImage(FRAME_WIDTH + 100, FRAME_HEIGHT + 100, BufferedImage.TYPE_INT_RGB);
 		Graphics graphics;
 		
 		Random rand;
+		boolean gridVis = false;
 		
 		public JPanelClass(Main m, Graphics g) {
 			
 			rand = new Random();
-			
 			main = m;
 			graphics = g;
 			
@@ -327,76 +301,23 @@ public class Main implements Runnable {
 			this.add(effectSlider);
 			
 		}
-
-		/*ALL COMMENTED OUT SECTIONS WERE BASED ON
-		  IDEA OF SAVING FRAMES FOR REPLAY LATER */
 		
 		public void paintComponent(Graphics g) {
 			super.paintComponent(g);
+			boolean gridVis = false;
 			
-			if(makeNewFrames) {
+			g2 = (Graphics2D) graphicsImage.getGraphics();
+			g2.setColor(Color.BLACK);
+			g2.fillRect(0, 0, FRAME_WIDTH, FRAME_HEIGHT);
 			
-				tick();
-				
-				g2 = (Graphics2D) graphicsImage.getGraphics();
-				
-				g2.setColor(Color.BLACK);
-				g2.fillRect(0, 0, frameWidth, frameHeight);
-				
-				//gradientClass.paint(g2);
-				for(int i = 0; i < numCreatures; i++) creatures[i].paint(g2);
-				
-				if(gridVis) for(Rectangle r : sectRects) { g2.draw(r); }
-				for(int i = 0; i < sectRects.length; i++) {
-					
-					//g2.drawString(Integer.toString(i), (int)sectRects[i].getX() + 10, (int)sectRects[i].getY() + 10);
-					
-				}
-				
-				//graphicsImage = op.filter(graphicsImage, null);
-				
-				/*
-				
-				File imageFile = new File("C:\\Users\\Alex\\Desktop\\Eclipse Workspace\\Patters2\\frames\\image"+framesAdded+".jpg");
-				try {
-					ImageIO.write(copyImage(graphicsImage), "jpg", imageFile);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				
-				System.out.println("added " + framesAdded);
-				framesAdded++;
-				
-				if(framesAdded > numFrames) { makeNewFrames = false; ticks = 30.0; }
-				
-				*/
-				
-				g.drawImage(graphicsImage, 0, 0, null);
+			for(int i = 0; i < numCreatures; i++) creatures[i].paint(g2);
 			
-			} else {
-				
-				if(frameOn > frames.length - 5) frameOn = 0;
-				
-				try {
-					g.drawImage(ImageIO.read(new File("C:\\Users\\Alex\\Desktop\\Eclipse Workspace\\Patters2\\frames\\image"+frameOn+".jpg")), 0, 0, null);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				frameOn++;
-				
-			}
+			if(gridVis) for(Rectangle r : sectRects) { g2.draw(r); }
+			
+			g.drawImage(graphicsImage, 0, 0, null);
 			
 		}
 		
-	}
-	
-	//Util classS
-	public static BufferedImage copyImage(BufferedImage source){
-	    BufferedImage b = new BufferedImage(source.getWidth(), source.getHeight(), source.getType());
-	    Graphics g = b.getGraphics();
-	    g.drawImage(source, 0, 0, null);
-	    g.dispose();
-	    return b;
 	}
 	
 }
